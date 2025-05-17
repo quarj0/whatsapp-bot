@@ -1,12 +1,39 @@
 const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
+const express = require('express');
+const qrcode = require('qrcode');
 const fs = require('fs');
 const path = require('path');
 const db = require('./utils/db');
 const ms = require('ms');
 const askHF = require('./utils/gpt');
 
+const app = express();
+const PORT = process.env.PORT || 3000;
 
+app.use(express.static(path.join(__dirname, 'public')));
+
+let latestQR = null;
+
+app.get('/', (_, res) => res.send('Bot is running'));
+
+app.get('/qr', async (req, res) => {
+  if (!latestQR) return res.status(404).send('QR not available');
+  try {
+    const qrDataUrl = await qrcode.toDataURL(latestQR);
+    const img = Buffer.from(qrDataUrl.split(',')[1], 'base64');
+    res.writeHead(200, {
+      'Content-Type': 'image/png',
+      'Content-Length': img.length,
+    });
+    res.end(img);
+  } catch (err) {
+    res.status(500).send('Error generating QR');
+  }
+});
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ Server running on http://0.0.0.0:${PORT}`);
+});
 
 const client = new Client({
   authStrategy: new LocalAuth({ dataPath: './.wwebjs_auth' }),
@@ -16,19 +43,18 @@ const client = new Client({
   },
 });
 
-
 let botJid = null;
 let adminJid = null;
 
-// client.on('qr', qr => {
-//   console.log('QR code generated');
-//   qrcode.generate(qr, { small: true });
-// });
+client.on('qr', (qr) => {
+  latestQR = qr;
+  console.log('✅ QR code updated. Visit /qr to scan.');
+});
 
 client.on('ready', () => {
   botJid = client.info.wid._serialized;
   adminJid = botJid;
-  console.log('✅ Bot is ready! JID:', botJid);
+  console.log('🤖 Bot is ready! JID:', botJid);
 });
 
 async function safeDownload(msg, attempts = 5, delay = 1000) {
@@ -224,9 +250,3 @@ client.on('message', async msg => {
 
 client.initialize();
 
-const http = require('http');
-const PORT = process.env.PORT || 3000;
-http.createServer((_, res) => {
-  res.end('Bot is running');
-}).listen(PORT, '0.0.0.0');
-console.log(`Server running on port ${PORT}`);
