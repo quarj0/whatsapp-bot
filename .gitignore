@@ -1,4 +1,10 @@
 node_modules/*
-node_modules/
-node_modules/
-.local-chromium/
+.node-chromium/
+*.log
+*.tsbuildinfo
+*.tgz
+*.zip
+*.tar.gz
+*.tar
+*.tar.xz
+
