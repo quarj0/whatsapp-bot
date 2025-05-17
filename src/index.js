@@ -7,14 +7,15 @@ const ms = require('ms');
 const askHF = require('./utils/gpt');
 
 
+
 const client = new Client({
-  authStrategy: new LocalAuth(),
+  authStrategy: new LocalAuth({ dataPath: './.wwebjs_auth' }),
   puppeteer: {
     headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-cache'],
-    timeout: 60000
-  }
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  },
 });
+
 
 let botJid = null;
 let adminJid = null;
