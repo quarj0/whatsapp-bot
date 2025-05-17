@@ -7,4 +7,6 @@ node_modules/*
 *.tar.gz
 *.tar
 *.tar.xz
-
+*.env
+*.env.*
+*.local.env
