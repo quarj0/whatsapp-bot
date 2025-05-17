@@ -1,0 +1,25 @@
+2025/05/17-13:09:09.002 1b721 Reusing MANIFEST /home/quarjo/whatsapp-bot/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2025/05/17-13:09:09.002 1b721 Recovering log #49
+2025/05/17-13:09:09.017 1b721 Reusing old log /home/quarjo/whatsapp-bot/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000049.log 
+2025/05/17-13:09:09.017 1b721 Delete type=2 #50
+2025/05/17-13:09:09.017 1b721 Delete type=2 #48
+2025/05/17-13:09:11.744 1b722 Level-0 table #54: started
+2025/05/17-13:09:11.759 1b722 Level-0 table #54: 223560 bytes OK
+2025/05/17-13:09:11.762 1b722 Delete type=0 #49
+2025/05/17-13:09:11.762 1b721 Manual compaction at level-0 from '\x00\x1c\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x1d\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/05/17-13:09:13.637 1b726 Compacting 1@1 + 1@2 files
+2025/05/17-13:09:13.676 1b726 Generated table #55@1: 25500 keys, 1180304 bytes
+2025/05/17-13:09:13.676 1b726 Compacted 1@1 + 1@2 files => 1180304 bytes
+2025/05/17-13:09:13.678 1b726 compacted to: files[ 0 0 1 0 0 0 0 ]
+2025/05/17-13:09:13.678 1b726 Delete type=2 #51
+2025/05/17-13:09:13.678 1b726 Delete type=2 #54
+2025/05/17-13:14:15.244 1b721 Level-0 table #57: started
+2025/05/17-13:14:15.262 1b721 Level-0 table #57: 657860 bytes OK
+2025/05/17-13:14:15.265 1b721 Delete type=0 #53
+2025/05/17-13:14:15.266 1b721 Manual compaction at level-0 from '\x00\x1d\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x1e\x00\x00\x00' @ 0 : 0; will stop at (end)
+2025/05/17-13:14:45.064 1b73a Compacting 1@1 + 1@2 files
+2025/05/17-13:14:45.140 1b73a Generated table #58@1: 30487 keys, 1391366 bytes
+2025/05/17-13:14:45.140 1b73a Compacted 1@1 + 1@2 files => 1391366 bytes
+2025/05/17-13:14:45.143 1b73a compacted to: files[ 0 0 1 0 0 0 0 ]
+2025/05/17-13:14:45.143 1b73a Delete type=2 #57
+2025/05/17-13:14:45.143 1b73a Delete type=2 #55
