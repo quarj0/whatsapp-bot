@@ -6,29 +6,27 @@ const path = require('path');
 const db = require('./utils/db');
 const ms = require('ms');
 const askHF = require('./utils/gpt');
+const compression = require('compression');
+const LRU = require('lru-cache');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(compression());
 app.use(express.static(path.join(__dirname, 'public')));
 
 let latestQR = null;
+let qrImageBuffer = null;
 
 app.get('/', (_, res) => res.send('Bot is running'));
 
-app.get('/qr', async (req, res) => {
-  if (!latestQR) return res.status(404).send('QR not available');
-  try {
-    const qrDataUrl = await qrcode.toDataURL(latestQR);
-    const img = Buffer.from(qrDataUrl.split(',')[1], 'base64');
-    res.writeHead(200, {
-      'Content-Type': 'image/png',
-      'Content-Length': img.length,
-    });
-    res.end(img);
-  } catch (err) {
-    res.status(500).send('Error generating QR');
-  }
+app.get('/qr', (req, res) => {
+  if (!qrImageBuffer) return res.status(404).send('QR not available');
+  res.writeHead(200, {
+    'Content-Type': 'image/png',
+    'Content-Length': qrImageBuffer.length,
+  });
+  res.end(qrImageBuffer);
 });
 
 app.listen(PORT, '0.0.0.0', () => {
@@ -46,9 +44,15 @@ const client = new Client({
 let botJid = null;
 let adminJid = null;
 
-client.on('qr', (qr) => {
+client.on('qr', async (qr) => {
   latestQR = qr;
-  console.log('✅ QR code updated. Visit /qr to scan.');
+  try {
+    const qrDataUrl = await qrcode.toDataURL(qr);
+    qrImageBuffer = Buffer.from(qrDataUrl.split(',')[1], 'base64');
+    console.log('✅ QR code updated and cached. Visit /qr to scan.');
+  } catch (e) {
+    console.error('Failed to cache QR:', e);
+  }
 });
 
 client.on('ready', () => {
@@ -71,6 +75,8 @@ async function safeDownload(msg, attempts = 5, delay = 1000) {
   }
   throw new Error('Media download failed after retries');
 }
+
+const gptCache = new LRU({ max: 100, maxAge: 1000 * 60 * 5 }); // 5 min cache
 
 const responses = {
   school: `🏫 *School Website*:
@@ -134,10 +140,13 @@ client.on('message', async msg => {
     }
   }
 
-  db.prepare(`
-    INSERT INTO messages (id, fromJid, body, timestamp, mediaPath, mediaType, isViewOnce, processed)
-    VALUES (?, ?, ?, ?, ?, ?, ?, 1)
-  `).run(fullId, from, body, msg.timestamp, mediaPath, mediaType, msg.isViewOnce ? 1 : 0);
+  // Insert message asynchronously
+  setImmediate(() => {
+    db.prepare(`
+      INSERT INTO messages (id, fromJid, body, timestamp, mediaPath, mediaType, isViewOnce, processed)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+    `).run(fullId, from, body, msg.timestamp, mediaPath, mediaType, msg.isViewOnce ? 1 : 0);
+  });
 
   if (/^(hi|hello|hey|good (morning|afternoon|evening))\b/.test(lc)) {
     return client.sendMessage(from, 'Hello! I’m your technical assistant. You can type "help" for available services.');
@@ -230,23 +239,28 @@ client.on('message', async msg => {
   Ask about packages or get a quote!`
     );
   }
-  
 
   if (/how are you/.test(lc)) return client.sendMessage(from, 'I’m great! Ready to assist. What do you need?');
   if (/thank you|thanks|appreciate/.test(lc)) return client.sendMessage(from, 'You’re welcome!');
-  
-    // 🤖 GPT fallback if no previous reply matched
-    try {
-      const gptReply = await askHF(body);
-      if (!gptReply) {
-        return;
-      }
+
+  // GPT fallback with cache
+  const cacheKey = body.trim().toLowerCase();
+  if (gptCache.has(cacheKey)) {
+    return client.sendMessage(from, gptCache.get(cacheKey));
+  }
+
+  try {
+    const gptReply = await askHF(body);
+    if (!gptReply) {
+      return;
+    } else {
+      gptCache.set(cacheKey, gptReply);
       return client.sendMessage(from, gptReply);
-    } catch (err) {
-      console.error('❌ GPT error:', err.message);
-      return client.sendMessage(from, "Sorry, I couldn’t process that. Try rephrasing your message.");
     }
+  } catch (err) {
+    console.error('❌ GPT error:', err.message);
+    return client.sendMessage(from, "Sorry, I couldn’t process that. Try rephrasing your message.");
+  }
 });
 
 client.initialize();
-
