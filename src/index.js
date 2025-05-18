@@ -1,4 +1,4 @@
-const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
+const { Client, MessageMedia } = require('whatsapp-web.js');
 const express = require('express');
 const qrcode = require('qrcode');
 const fs = require('fs');
@@ -8,6 +8,10 @@ const ms = require('ms');
 const askHF = require('./utils/gpt');
 const compression = require('compression');
 const { LRUCache } = require('lru-cache');
+const RedisAuth = require('./utils/redis-auth');
+const cron = require('node-cron');
+const axios = require('axios');
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,7 +23,6 @@ let latestQR = null;
 let qrImageBuffer = null;
 
 app.get('/', (_, res) => res.send('Bot is running'));
-
 app.get('/qr', (req, res) => {
   if (!qrImageBuffer) return res.status(404).send('QR not available');
   res.writeHead(200, {
@@ -34,7 +37,7 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 const client = new Client({
-  authStrategy: new LocalAuth({ dataPath: './.wwebjs_auth' }),
+  authStrategy: new RedisAuth('whatsapp-session'),
   puppeteer: {
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
@@ -261,3 +264,14 @@ client.on('message', async msg => {
 });
 
 client.initialize();
+
+const APP_URL = process.env.APP_URL || 'https://whatsapp-bot-465b.onrender.com/';
+// Self-ping every 4 minutes to keep the app alive 
+cron.schedule('*/4 * * * *', async () => {
+  try {
+    await axios.get(APP_URL);
+    console.log('⏱️ Self-pinged to stay alive.');
+  } catch (err) {
+    console.warn('⚠️ Self-ping failed:', err.message);
+  }
+});
