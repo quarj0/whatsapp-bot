@@ -39,7 +39,6 @@ app.listen(PORT, '0.0.0.0', () => {
 
 const client = new Client({
   authStrategy: new LocalAuth(),
-  skipCache: true,
   puppeteer: {
     headless: true,
     args: [
