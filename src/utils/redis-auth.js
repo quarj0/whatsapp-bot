@@ -1,23 +1,21 @@
 const { Store } = require('whatsapp-web.js');
 const redis = require('./redis');
 
-class RedisAuth {
-  constructor(sessionKey = 'wwebjs-session') {
+class RedisAuth extends Store {
+  constructor(sessionKey = 'whatsapp-session') {
+    super();
     this.sessionKey = sessionKey;
   }
-
-  async save(session) {
-    await redis.set(this.sessionKey, JSON.stringify(session));
-  }
-
-  async load() {
+  async setup() {
     const data = await redis.get(this.sessionKey);
-    return data ? JSON.parse(data) : null;
+    if (data) this.saveAuthInfo(JSON.parse(data));
   }
-
-  async remove() {
-    await redis.del(this.sessionKey);
+  async saveAuthInfo(auth) {
+    await redis.set(this.sessionKey, JSON.stringify(auth));
+  }
+  async getAuthInfo() {
+    const data = await redis.get(this.sessionKey);
+    return data ? JSON.parse(data) : undefined;
   }
 }
-
 module.exports = RedisAuth;
