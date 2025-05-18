@@ -38,6 +38,7 @@ app.listen(PORT, '0.0.0.0', () => {
 
 const client = new Client({
   authStrategy: new RedisAuth('whatsapp-session'),
+  skipCache: true,
   puppeteer: {
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
