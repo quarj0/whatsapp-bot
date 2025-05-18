@@ -10,6 +10,10 @@ class RedisAuth {
   async beforeBrowserInitialized(opts) {
     // you can tweak opts here if needed
   }
+    
+  async onAuthenticationNeeded() {
+    return { failed: false, restart: false };
+  }
 
   // Called after browser is launched
   async afterBrowserInitialized(browser) {}
