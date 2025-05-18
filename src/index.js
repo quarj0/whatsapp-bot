@@ -7,8 +7,7 @@ const db = require('./utils/db');
 const ms = require('ms');
 const askHF = require('./utils/gpt');
 const compression = require('compression');
-const LRU = require('lru-cache');
-
+const { LRUCache } = require('lru-cache');
 
 
 const app = express();
@@ -78,7 +77,7 @@ async function safeDownload(msg, attempts = 5, delay = 1000) {
   throw new Error('Media download failed after retries');
 }
 
-const gptCache = new LRU({ max: 100, ttl: 1000 * 60 * 5});
+const gptCache = new LRUCache({ max: 100, ttl: 1000 * 60 * 5 });
 
 const responses = {
   school: `🏫 *School Website*:
