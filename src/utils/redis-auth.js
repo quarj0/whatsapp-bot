@@ -15,6 +15,11 @@ class RedisAuth {
     return { failed: false, restart: false };
   }
 
+  // logout
+  async logout() {
+    await redis.del(this.sessionKey);
+  }
+  
   // Called after browser is launched
   async afterBrowserInitialized(browser) {}
 
