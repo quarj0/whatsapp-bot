@@ -9,7 +9,6 @@ const askHF = require('./utils/gpt');
 const compression = require('compression');
 const { LRUCache } = require('lru-cache');
 
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -100,7 +99,6 @@ We’ll help with setup and DNS config.`,
 Let us know your needs for a custom plan.`,
 };
 
-
 client.on('message', async msg => {
   if (msg.from === 'status@broadcast') return;
 
@@ -114,7 +112,7 @@ client.on('message', async msg => {
 
   if (msg.fromMe) from = adminJid;
 
-  const seen = db.prepare('SELECT 1 FROM messages WHERE id = ?').get(fullId);
+  const seen = await db('messages').where({ id: fullId }).first();
   if (seen) return;
 
   let mediaPath = null, mediaType = null;
@@ -142,22 +140,26 @@ client.on('message', async msg => {
   }
 
   // Insert message asynchronously
-  setImmediate(() => {
-    db.prepare(`
-      INSERT INTO messages (id, fromJid, body, timestamp, mediaPath, mediaType, isViewOnce, processed)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 1)
-    `).run(fullId, from, body, msg.timestamp, mediaPath, mediaType, msg.isViewOnce ? 1 : 0);
-  });
+  db('messages').insert({
+    id: fullId,
+    fromJid: from,
+    body,
+    timestamp: msg.timestamp,
+    mediaPath,
+    mediaType,
+    isViewOnce: msg.isViewOnce ? 1 : 0,
+    processed: 1,
+  }).catch(console.error);
 
   if (/^(hi|hello|hey|good (morning|afternoon|evening))\b/.test(lc)) {
     return client.sendMessage(from, 'Hello! I’m your technical assistant. You can type "help" for available services.');
   }
 
   if (lc === 'help') {
-    return client.sendMessage(from, 
+    return client.sendMessage(from,
       'Available services:\n' +
       '- Website Development\n- Cyber Security\n- Mobile Apps\n- API Development\n\n' +
-      'You can also ask about pricing, domain/hosting, or maintenance.\n\n' 
+      'You can also ask about pricing, domain/hosting, or maintenance.\n\n'
     );
   }
 
@@ -168,7 +170,6 @@ client.on('message', async msg => {
     );
   }
 
-  // Admin commands
   if (lc.startsWith('!')) {
     if (from !== adminJid) {
       return client.sendMessage(from, '❌ Admin commands are restricted to the bot owner.');
@@ -185,16 +186,17 @@ client.on('message', async msg => {
     }
 
     if (lc === '!stats') {
-      const total = db.prepare('SELECT COUNT(*) as count FROM messages').get().count;
-      const users = db.prepare('SELECT COUNT(DISTINCT fromJid) as count FROM messages').get().count;
+      const totalRow = await db('messages').count({ count: '*' }).first();
+      const usersRow = await db('messages').countDistinct({ count: 'fromJid' }).first();
+      const total = totalRow.count;
+      const users = usersRow.count;
       return client.sendMessage(from,
         `📊 Bot Stats:\n- Messages: ${total}\n- Users: ${users}`
       );
     }
 
     if (lc === '!exit') {
-      await client.sendMessage(from, 'Shutting down...');
-      await client.destroy();
+      await client.sendMessage(from, 'Shutting down... \n\n Just a moment...');
       return;
     }
 
@@ -222,13 +224,11 @@ client.on('message', async msg => {
     }
   }
 
-  // Service-specific replies
   if (/school.*(website|site)/i.test(lc)) return client.sendMessage(from, responses.school);
   if (/e-?commerce.*(website|site)/i.test(lc)) return client.sendMessage(from, responses.ecommerce);
   if (/domain|hosting/.test(lc)) return client.sendMessage(from, responses.domain);
   if (/maintenance|update|fix/.test(lc)) return client.sendMessage(from, responses.maintenance);
 
-  // Pricing general
   if (/(price|cost|how much)/i.test(lc)) {
     return client.sendMessage(from,
       `💰 *Service Pricing*:
@@ -244,7 +244,6 @@ client.on('message', async msg => {
   if (/how are you/.test(lc)) return client.sendMessage(from, 'I’m great! Ready to assist. What do you need?');
   if (/thank you|thanks|appreciate/.test(lc)) return client.sendMessage(from, 'You’re welcome!');
 
-  // GPT fallback with cache
   const cacheKey = body.trim().toLowerCase();
   if (gptCache.has(cacheKey)) {
     return client.sendMessage(from, gptCache.get(cacheKey));
@@ -252,12 +251,9 @@ client.on('message', async msg => {
 
   try {
     const gptReply = await askHF(body);
-    if (!gptReply) {
-      return;
-    } else {
-      gptCache.set(cacheKey, gptReply);
-      return client.sendMessage(from, gptReply);
-    }
+    if (!gptReply) return;
+    gptCache.set(cacheKey, gptReply);
+    return client.sendMessage(from, gptReply);
   } catch (err) {
     console.error('❌ GPT error:', err.message);
     return client.sendMessage(from, "Sorry, I couldn’t process that. Try rephrasing your message.");
