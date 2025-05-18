@@ -16,13 +16,14 @@ const axios = require('axios');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.get('/', (_, res) => res.send('Bot is running'));
+
 app.use(compression());
 app.use(express.static(path.join(__dirname, 'public')));
 
 let latestQR = null;
 let qrImageBuffer = null;
 
-app.get('/', (_, res) => res.send('Bot is running'));
 app.get('/qr', (req, res) => {
   if (!qrImageBuffer) return res.status(404).send('QR not available');
   res.writeHead(200, {
@@ -266,7 +267,7 @@ client.on('message', async msg => {
 
 client.initialize();
 
-const APP_URL = process.env.APP_URL || 'https://whatsapp-bot-465b.onrender.com/';
+const APP_URL = process.env.APP_URL || 'https://whatsapp-bot-3ktl.onrender.com';
 // Self-ping every 4 minutes to keep the app alive 
 cron.schedule('*/4 * * * *', async () => {
   try {
