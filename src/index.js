@@ -41,8 +41,7 @@ const client = new Client({
   authStrategy: new RedisAuth('whatsapp-session'),
   skipCache: true,
   puppeteer: {
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    browserWSEndpoint: process.env.BROWSER_WS_ENDPOINT,
   },
 });
 
