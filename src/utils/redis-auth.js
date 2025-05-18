@@ -17,7 +17,16 @@ class RedisAuth {
 
   // logout
   async logout() {
-    await redis.del(this.sessionKey);
+    return new Promise((resolve, reject) => {
+      redis.del(this.sessionKey, (err) => {
+        if (err) {
+          console.error('Error deleting session:', err);
+          return reject(err);
+        }
+        console.log('Session deleted successfully');
+        resolve();
+      });
+    });
   }
   
   // Called after browser is launched
