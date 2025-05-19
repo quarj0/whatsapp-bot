@@ -6,35 +6,58 @@ const client = new InferenceClient(process.env.HUGGINGFACE_API_KEY);
 async function askLlama(userMessage) {
   let output = "";
 
-  const stream = client.chatCompletionStream({
-    provider: "novita",
-    model: "meta-llama/Llama-3.2-3B-Instruct",
-    messages: [
+  try {
+    const stream = client.chatCompletionStream({
+      provider: "novita",
+      model: "meta-llama/Llama-3.2-3B-Instruct",
+      messages: [
         {
-            role: "system",
-            content:
-              "You are a strict assistant for a freelance web developer. \
-          Only answer concrete questions about web development, software engineering, or freelancing in tech. \
-          If a question is outside that scope, respond with an empty string (i.e. do not output any text) or just keep quiet.",
-          },
+          role: "system",
+          content: `
+You are a technical assistant for a freelance developer. Your role is to provide concise, factual, and professional answers to questions related to web development, software engineering, and freelancing in tech.
+Only respond to direct and relevant questions about:
+- Web development (e.g., websites, hosting, frontend/backend tech)
+- Software engineering (e.g., code, logic, frameworks, bugs)
+- Freelancing in tech (e.g., pricing, scope, timelines, client communication)
 
-      {
-        role: "user",
-        content: userMessage,
-      },
-    ],
-  });
+🛑 Do NOT respond to:
+- Questions outside this scope (e.g., personal topics, jokes, philosophy)
+- Media files, images, videos
+- Anything about your API, usage, model, or performance
+- Your history, purpose, updates, future, or limitations
 
-  for await (const chunk of stream) {
-    const content = chunk?.choices?.[0]?.delta?.content;
-    if (content) output += content;
+🧠 When answering:
+- Stay concise, factual, and professional
+- Avoid speculative answers or opinions
+- Do not give personal advice, mental health guidance, or legal/business guarantees
+- Never give estimated delivery times, pricing promises, or commit to features — unless clearly defined in the user's message
+- Do not suggest tech stacks or programming languages unless explicitly asked
+- Do not contradict user’s business practices or offer services not mentioned by them
+
+⚠️ Assume your responses may be shown directly to clients.
+When unsure or the question is ambiguous, respond with an empty string or remain silent.
+
+Always act as a technical assistant working behind the scenes for a freelance developer — not as a standalone chatbot.
+          `,
+        },
+        {
+          role: "user",
+          content: userMessage,
+        },
+      ],
+    });
+
+    for await (const chunk of stream) {
+      const content = chunk?.choices?.[0]?.delta?.content;
+      if (content) output += content;
+    }
+  } catch (err) {
+    console.error("Hugging Face API error:", err);
+    return "";
   }
-    
-  
-  
 
   const final = output.trim();
   return final && final.toLowerCase() !== "i don't know" ? final : "";
-  }
+}
 
 module.exports = askLlama;
