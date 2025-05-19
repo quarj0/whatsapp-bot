@@ -11,6 +11,7 @@ const { LRUCache } = require('lru-cache');
 const RedisAuth = require('./utils/redis-auth');
 const cron = require('node-cron');
 const axios = require('axios');
+const { from } = require('readable-stream');
 
 
 const app = express();
@@ -47,7 +48,7 @@ const client = new Client({
 });
 
 let botJid = null;
-let adminJid = null;
+
 
 client.on('qr', async (qr) => {
   latestQR = qr;
@@ -97,7 +98,7 @@ Custom features may cost more.`,
   domain: `🌐 *Domain & Hosting*:
 - Domain: GHS 150+/year
 - Hosting: GHS 250+/year
-We’ll help with setup and DNS config.`,
+I can help with setup and DNS config.`,
 
   maintenance: `🛠️ *Website Maintenance*:
 - GHS 50/hour for fixes, updates, and support
@@ -107,7 +108,6 @@ Let us know your needs for a custom plan.`,
 client.on('message', async msg => {
   if (msg.from === 'status@broadcast') return;
 
-  let from = msg.from;
   const fullId = msg.id._serialized;
   const body = msg.body?.trim() || '';
   const lc = body.toLowerCase();
@@ -115,7 +115,7 @@ client.on('message', async msg => {
   const currentTime = Math.floor(Date.now() / 1000);
   if (msg.timestamp < currentTime - 60) return;
 
-  if (msg.fromMe) from = adminJid;
+  
 
   const seen = await db('messages').where({ id: fullId }).first();
   if (seen) return;
@@ -168,15 +168,15 @@ client.on('message', async msg => {
     );
   }
 
-  if (lc === 'admin') {
+  if (lc === 'admin' && msg.fromMe) {
     return client.sendMessage(from,
       'Admin Commands:\n' +
-      '- !status\n- !info\n- !stats\n- !exit\n- !remove (in groups only)'
+      '- !status\n- !stats\n- !exit\n- !remove (in groups only)'
     );
   }
 
   if (lc.startsWith('!')) {
-    if (from !== adminJid) {
+    if (from !== msg.fromMe) {
       return client.sendMessage(from, '❌ Admin commands are restricted to the bot owner.');
     }
 
@@ -184,11 +184,7 @@ client.on('message', async msg => {
       return client.sendMessage(from, 'Bot is active and running.');
     }
 
-    if (lc === '!info') {
-      return client.sendMessage(from,
-        'Bot Info:\n- Version: 1.0.0\n- Developer: K. Owusu Ansah\n- Services: Automation for Businesses\n'
-      );
-    }
+  
 
     if (lc === '!stats') {
       const totalRow = await db('messages').count({ count: '*' }).first();
