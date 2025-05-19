@@ -261,9 +261,9 @@ client.on('message', async msg => {
 
 client.initialize();
 
-const APP_URL = process.env.APP_URL || 'https://whatsapp-bot-3ktl.onrender.com' || 'http://0.0.0.0:3000';
-// Self-ping every 4 minutes to keep the app alive 
-cron.schedule('*/4 * * * *', async () => {
+const APP_URL = process.env.APP_URL || 'https://whatsapp-bot-3ktl.onrender.com';
+// Self-ping every 10 minutes to keep the app alive
+cron.schedule('*/10 * * * *', async () => {
   try {
     await axios.get(APP_URL);
     console.log('⏱️ Self-pinged to stay alive.');
