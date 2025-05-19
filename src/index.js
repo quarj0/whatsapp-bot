@@ -145,7 +145,7 @@ client.on('message', async msg => {
   // Insert message asynchronously
   db('messages').insert({
     id: fullId,
-    fromJid: from,
+    fromJid: msg.from,
     body,
     timestamp: msg.timestamp,
     mediaPath,
@@ -155,11 +155,11 @@ client.on('message', async msg => {
   }).catch(console.error);
 
   if (/^(hi|hello|hey|good (morning|afternoon|evening))\b/.test(lc)) {
-    return client.sendMessage(from, 'Hello! I’m your technical assistant. You can type "help" for available services.');
+    return client.sendMessage(msg.from, 'Hello! I’m your technical assistant. You can type "help" for available services.');
   }
 
   if (lc === 'help') {
-    return client.sendMessage(from,
+    return client.sendMessage(msg.from,
       'Available services:\n' +
       '- Website Development\n- Cyber Security\n- Mobile Apps\n- API Development\n\n' +
       'You can also ask about pricing, domain/hosting, or maintenance.\n\n'
@@ -167,19 +167,19 @@ client.on('message', async msg => {
   }
 
   if (lc === 'admin' && msg.fromMe) {
-    return client.sendMessage(from,
+    return client.sendMessage(msg.from,
       'Admin Commands:\n' +
       '- !status\n- !stats\n- !exit\n- !remove (in groups only)'
     );
   }
 
   if (lc.startsWith('!')) {
-    if (from !== msg.fromMe) {
-      return client.sendMessage(from, '❌ Admin commands are restricted to the bot owner.');
+    if (msg.from !== msg.fromMe) {
+      return client.sendMessage(msg.from, '❌ Admin commands are restricted to the bot owner.');
     }
 
     if (lc === '!status') {
-      return client.sendMessage(from, 'Bot is active and running.');
+      return client.sendMessage(msg.from, 'Bot is active and running.');
     }
 
   
@@ -189,7 +189,7 @@ client.on('message', async msg => {
       const usersRow = await db('messages').countDistinct({ count: 'fromJid' }).first();
       const total = totalRow.count;
       const users = usersRow.count;
-      return client.sendMessage(from,
+      return client.sendMessage(msg.from,
         `📊 Bot Stats:\n- Messages: ${total}\n- Users: ${users}`
       );
     }
@@ -201,13 +201,13 @@ client.on('message', async msg => {
 
     if (lc === '!remove') {
       const chat = await msg.getChat();
-      if (!chat.isGroup) return client.sendMessage(from, '❌ Group command only.');
+      if (!chat.isGroup) return client.sendMessage(msg.from, '❌ Group command only.');
 
       const sender = chat.participants.find(p => p.id._serialized === msg.author);
-      if (!sender?.isAdmin) return client.sendMessage(from, '❌ Only group admins can remove members.');
+      if (!sender?.isAdmin) return client.sendMessage(msg.from, '❌ Only group admins can remove members.');
 
       const mentions = await msg.getMentions();
-      if (!mentions.length) return client.sendMessage(from, 'Tag someone to remove.');
+      if (!mentions.length) return client.sendMessage(msg.from, 'Tag someone to remove.');
 
       const success = [];
       for (const user of mentions) {
@@ -223,13 +223,13 @@ client.on('message', async msg => {
     }
   }
 
-  if (/school.*(website|site)/i.test(lc)) return client.sendMessage(from, responses.school);
-  if (/e-?commerce.*(website|site)/i.test(lc)) return client.sendMessage(from, responses.ecommerce);
-  if (/domain|hosting/.test(lc)) return client.sendMessage(from, responses.domain);
-  if (/maintenance|update|fix/.test(lc)) return client.sendMessage(from, responses.maintenance);
+  if (/school.*(website|site)/i.test(lc)) return client.sendMessage(msg.from, responses.school);
+  if (/e-?commerce.*(website|site)/i.test(lc)) return client.sendMessage(msg.from, responses.ecommerce);
+  if (/domain|hosting/.test(lc)) return client.sendMessage(msg.from, responses.domain);
+  if (/maintenance|update|fix/.test(lc)) return client.sendMessage(msg.from, responses.maintenance);
 
   if (/(price|cost|how much)/i.test(lc)) {
-    return client.sendMessage(from,
+    return client.sendMessage(msg.from,
       `💰 *Service Pricing*:
   - 🌍 Website: GHS 2,000+ (basic), GHS 4,000+ (custom)
   - 🔐 Cyber Security: GHS 4,000+ (assessment)
@@ -240,22 +240,22 @@ client.on('message', async msg => {
     );
   }
 
-  if (/how are you/.test(lc)) return client.sendMessage(from, 'I’m great! Ready to assist. What do you need?');
-  if (/thank you|thanks|appreciate/.test(lc)) return client.sendMessage(from, 'You’re welcome!');
+  if (/how are you/.test(lc)) return client.sendMessage(msg.from, 'I’m great! Ready to assist. What do you need?');
+  if (/thank you|thanks|appreciate/.test(lc)) return client.sendMessage(msg.from, 'You’re welcome!');
 
   const cacheKey = body.trim().toLowerCase();
   if (gptCache.has(cacheKey)) {
-    return client.sendMessage(from, gptCache.get(cacheKey));
+    return client.sendMessage(msg.from, gptCache.get(cacheKey));
   }
 
   try {
     const gptReply = await askHF(body);
     if (!gptReply) return;
     gptCache.set(cacheKey, gptReply);
-    return client.sendMessage(from, gptReply);
+    return client.sendMessage(msg.from, gptReply);
   } catch (err) {
     console.error('❌ GPT error:', err.message);
-    return client.sendMessage(from, "Sorry, I couldn’t process that. Try rephrasing your message.");
+    return client.sendMessage(msg.from, "Sorry, I couldn’t process that. Try rephrasing your message.");
   }
 });
 
