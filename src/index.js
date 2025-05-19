@@ -24,7 +24,7 @@ let latestQR = null;
 let qrImageBuffer = null;
 
 app.get('/qr', (req, res) => {
-  if (!qrImageBuffer) return res.status(404).send('QR not available');
+  if (!qrImageBuffer) return res.status(404).send('QR Code not available');
   res.writeHead(200, {
     'Content-Type': 'image/png',
     'Content-Length': qrImageBuffer.length,
