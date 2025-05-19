@@ -195,7 +195,7 @@ client.on('message', async msg => {
     }
 
     if (lc === '!exit') {
-      await client.sendMessage(from, 'Shutting down... \n\n Just a moment...');
+      await client.sendMessage(msg.from, 'Shutting down... \n\n Just a moment...');
       return;
     }
 
