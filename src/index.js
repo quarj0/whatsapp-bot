@@ -8,10 +8,8 @@ const ms = require('ms');
 const askHF = require('./utils/gpt');
 const compression = require('compression');
 const { LRUCache } = require('lru-cache');
-// const RedisAuth = require('./utils/redis-auth');
 const cron = require('node-cron');
 const axios = require('axios');
-const { from } = require('readable-stream');
 
 
 const app = express();
@@ -135,7 +133,7 @@ client.on('message', async msg => {
       if (msg.isViewOnce) {
         const mediaMsg = MessageMedia.fromFilePath(mediaPath);
         await client.sendMessage(adminJid, mediaMsg, {
-          caption: `View Once media from ${from}`,
+          caption: `View Once media from ${msg.from}`,
           sendMediaAsDocument: true
         });
       }
