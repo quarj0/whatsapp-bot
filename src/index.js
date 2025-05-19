@@ -1,4 +1,4 @@
-const { Client, MessageMedia } = require('whatsapp-web.js');
+const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const express = require('express');
 const qrcode = require('qrcode');
 const fs = require('fs');
@@ -8,7 +8,7 @@ const ms = require('ms');
 const askHF = require('./utils/gpt');
 const compression = require('compression');
 const { LRUCache } = require('lru-cache');
-const RedisAuth = require('./utils/redis-auth');
+// const RedisAuth = require('./utils/redis-auth');
 const cron = require('node-cron');
 const axios = require('axios');
 const { from } = require('readable-stream');
@@ -39,7 +39,7 @@ app.listen(PORT, '0.0.0.0', () => {
 });
 
 const client = new Client({
-  authStrategy: new RedisAuth('whatsapp-session'),
+  authStrategy: new LocalAuth(),
   skipCache: true,
   puppeteer: {
     headless: true,
