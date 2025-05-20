@@ -74,7 +74,7 @@ async function initializeClient() {
 
 cron.schedule('*/10 * * * *', async () => {
     try {
-        await axios.get(APP_URL);
+        await axios.get(config.APP_URL);
         console.log('⏱️ Self-pinged to stay alive.');
     } catch (err) {
         console.warn('⚠️ Self-ping failed:', err.message);
