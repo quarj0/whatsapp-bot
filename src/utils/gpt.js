@@ -14,7 +14,8 @@ async function askLlama(userMessage) {
         {
           role: "system",
           content: `
-You are a technical assistant for a freelance developer. 
+You are a technical assistant for a freelance developer.
+
 
 Only respond to direct and relevant questions about:
 - Web development (e.g., websites, hosting, frontend/backend tech)
