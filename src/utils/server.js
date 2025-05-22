@@ -21,7 +21,6 @@ const logger = createLogger({
 
 const app = express();
 
-// Middleware
 app.use(compression());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(rateLimit({
@@ -56,7 +55,6 @@ app.get('/qr', (req, res) => {
   logger.info('Served QR code');
 });
 
-// Error handling middleware
 app.use((err, req, res, next) => {
   logger.error(`Server error: ${err.message}`, { stack: err.stack });
   res.status(500).send('Something went wrong!');

@@ -3,7 +3,6 @@ const path = require('path');
 const knex = require('knex');
 const config = require('../../knexfile');
 
-// Ensure data folder exists
 const dataDir = path.resolve(__dirname, '../data');
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir);
 

@@ -16,8 +16,7 @@ const logger = createLogger({
 });
 
 /**
- * Downloads media from a WhatsApp message with retries and exponential backoff.
- * @param {Object} msg - The WhatsApp message object.
+ * @param {Object} msg - The message object from WhatsApp Web.
  * @param {number} attempts - Number of retry attempts.
  * @param {number} initialDelay - Initial delay between retries in milliseconds.
  * @returns {Promise<Object>} The downloaded media object.

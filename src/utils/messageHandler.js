@@ -56,20 +56,17 @@ const handlers = {
     const lc = body.toLowerCase();
     const currentTime = Math.floor(Date.now() / 1000);
 
-    // Ignore old messages
     if (msg.timestamp < currentTime - 60) {
         logger.info(`Ignored old message: ${fullId}`);
         return;
     }
 
-    // Check for duplicates
     const seen = await db('messages').where({ id: fullId }).first();
     if (seen) {
         logger.info(`Ignored duplicate message: ${fullId}`);
         return;
     }
 
-    // Handle media
     let mediaPath = null, mediaType = null;
     if (msg.hasMedia || msg.isViewOnce) {
         try {
@@ -95,7 +92,6 @@ const handlers = {
         }
     }
 
-    // Log message to database
     await db('messages')
         .insert({
             id: fullId,
@@ -118,7 +114,6 @@ const handlers = {
         return;
     }
 
-    // Handle commands
     if (/^(hi|hello|hey|good (morning|afternoon|evening))\b/.test(lc)) {
         await handlers.greeting(msg, client);
     } else if (lc === 'help') {

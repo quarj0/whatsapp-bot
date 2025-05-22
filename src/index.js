@@ -3,7 +3,6 @@ const { initializeClient, client } = require('./utils/client.js');
 const { createLogger, transports } = require('winston');
 const winston = require('winston');
 
-// Initialize logger
 const logger = createLogger({
   level: 'info',
   format: winston.format.combine(
@@ -19,11 +18,9 @@ const logger = createLogger({
 
 async function main() {
   try {
-    // Start Express server
     await startServer();
     logger.info('Server started successfully');
 
-    // Initialize WhatsApp client
     await initializeClient();
     logger.info('WhatsApp client initialized');
   } catch (err) {
@@ -32,7 +29,6 @@ async function main() {
   }
 }
 
-// Handle graceful shutdown
 process.on('SIGTERM', async () => {
   logger.info('Received SIGTERM. Shutting down...');
  if (client) await client.destroy();

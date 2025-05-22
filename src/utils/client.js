@@ -41,7 +41,6 @@ async function initializeClient() {
       qrCache.set('latestQR', qrImageBuffer);
       logger.info(`QR code updated and cached. Visit ${config.APP_URL}/qr to scan.`);
       
-      // Notify admin via console (and WhatsApp if client is ready)
       console.log(`New QR code generated. Access it at ${config.APP_URL}/qr`);
       if (adminJid) {
         await client.sendMessage(adminJid, `New QR code generated. Access it at ${config.APP_URL}/qr`);
@@ -56,7 +55,6 @@ async function initializeClient() {
     adminJid = botJid; 
     logger.info(`Bot is ready! JID: ${botJid}`);
     
-    // Send any pending QR code URL to admin
     const qrImageBuffer = qrCache.get('latestQR');
     if (qrImageBuffer) {
       client.sendMessage(adminJid, `QR code available. Access it at ${config.APP_URL}/qr`);
